@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RocketBoyz | Cyber Tribal Moto Crew</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fuentes Google: Orbitron y Rajdhani -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Babel para JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Estilos Globales & Animaciones -->
+    <style>
+        body {
+            background-color: #050505;
+            color: #e5e7eb;
+            cursor: crosshair;
+            /* Cursor estilo mira */
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar Cyberpunk */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #dc2626;
+            border-radius: 0;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff0000;
+        }
+
+        .font-cyber {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .font-tech {
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .text-neon-red {
+            text-shadow: 0 0 10px rgba(220, 20, 60, 0.8), 0 0 20px rgba(220, 20, 60, 0.6), 0 0 30px rgba(220, 20, 60, 0.4);
+        }
+
+        .tribal-border {
+            clip-path: polygon(0% 0%,
+                    100% 0%,
+                    100% 85%,
+                    90% 100%,
+                    0% 100%,
+                    0% 15%);
+        }
+
+        /* Animación Glitch Intensa */
+        .glitch-hover:hover {
+            animation: glitch-skew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+            color: #ef4444;
+        }
+
+        @keyframes glitch-skew {
+            0% {
+                transform: skew(0deg);
+            }
+
+            20% {
+                transform: skew(-10deg);
+                filter: blur(1px);
+            }
+
+            40% {
+                transform: skew(10deg);
+            }
+
+            60% {
+                transform: skew(-5deg);
+            }
+
+            80% {
+                transform: skew(5deg);
+            }
+
+            100% {
+                transform: skew(0deg);
+            }
+        }
+
+        /* Fondo de Rejilla en Movimiento (Cyber Grid) */
+        .bg-grid-moving {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255, 0, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 0, 0, 0.05) 1px, transparent 1px);
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(40px);
+            }
+        }
+
+        /* Efecto Scanline (Barrido) */
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(to bottom, transparent 50%, rgba(255, 0, 0, 0.02) 51%, transparent 51%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .scanline::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(180deg, rgba(255, 0, 0, 0) 0%, rgba(220, 20, 60, 0.1) 50%, rgba(255, 0, 0, 0) 100%);
+            animation: scan 6s linear infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes scan {
+            0% {
+                top: -100px;
+            }
+
+            100% {
+                top: 100%;
+            }
+        }
+
+        /* Animaciones de Scroll Reveal */
+        .reveal-hidden {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+
+        .reveal-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Zoom lento para imagen hero */
+        .animate-breathe-zoom {
+            animation: breatheZoom 15s ease-in-out infinite alternate;
+        }
+
+        @keyframes breatheZoom {
+            0% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <!-- Overlay Scanline Global -->
+    <div class="scanline"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- ICONOS SVG SIMPLES ---
+        const Icon = ({ children, className, size = 24 }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {children}
+            </svg>
+        );
+
+        const Bike = (props) => <Icon {...props}><circle cx="18.5" cy="17.5" r="3.5" /><circle cx="5.5" cy="17.5" r="3.5" /><circle cx="15" cy="5" r="1" /><path d="M12 17.5V14l-3-3 4-3 2 3h2" /></Icon>;
+        const Zap = (props) => <Icon {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></Icon>;
+        const Skull = (props) => <Icon {...props}><path d="m12.5 17-.5-1-.5 1h1z" /><path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 5 20v1a1 1 0 0 0 1 1h9z" /><circle cx="8" cy="12" r="1" /><circle cx="16" cy="12" r="1" /></Icon>;
+        const Instagram = (props) => <Icon {...props}><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></Icon>;
+        const MapPin = (props) => <Icon {...props}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></Icon>;
+        const Users = (props) => <Icon {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></Icon>;
+        const ChevronDown = (props) => <Icon {...props}><path d="m6 9 6 6 6-6" /></Icon>;
+        const ExternalLink = (props) => <Icon {...props}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></Icon>;
+        const X = (props) => <Icon {...props}><path d="M18 6 6 18" /><path d="m6 6 18 12" /></Icon>;
+
+        // --- NUEVO LOGO MINIMALISTA SVG ---
+        const MinimalistLogo = ({ className }) => (
+            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+                {/* Estructura tribal externa */}
+                <path d="M100 5 L140 30 L130 80 L160 140 L100 195 L40 140 L70 80 L60 30 L100 5Z" stroke="#dc2626" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                {/* Elementos internos 'Cyber' y forma de 'R' abstracta */}
+                <path d="M100 30 V 170 M 75 65 L 125 65 M 85 120 L 115 120 L 130 150 M 70 150 L 85 120" stroke="#dc2626" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                {/* Núcleo central animado */}
+                <circle cx="100" cy="95" r="6" fill="#dc2626">
+                    <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" />
+                    <animate attributeName="r" values="6;8;6" dur="3s" repeatCount="indefinite" />
+                </circle>
+            </svg>
+        );
+
+        // --- COMPONENTE REUTILIZABLE: SCROLL REVEAL ---
+        const RevealOnScroll = ({ children, delay = 0 }) => {
+            const [isVisible, setIsVisible] = useState(false);
+            const domRef = useRef();
+
+            useEffect(() => {
+                const observer = new IntersectionObserver(entries => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            setIsVisible(true);
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                });
+                if (domRef.current) observer.observe(domRef.current);
+                return () => observer.disconnect();
+            }, []);
+
+            return (
+                <div
+                    ref={domRef}
+                    className={`reveal-hidden ${isVisible ? 'reveal-visible' : ''}`}
+                    style={{ transitionDelay: `${delay}ms` }}
+                >
+                    {children}
+                </div>
+            );
+        };
+
+        // --- APP COMPONENT ---
+        function App() {
+            const [scrolled, setScrolled] = useState(false);
+            const [activeMember, setActiveMember] = useState(null);
+
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const members = [
+                {
+                    id: 1, name: "KRAKEN", role: "Líder & Mecánico", bike: "Yamaha MT-09 Custom",
+                    desc: "Domina el asfalto nocturno. Especialista en modificaciones y rutas suicidas.",
+                    stats: { speed: 95, handling: 80, chaos: 40 },
+                    img: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=800"
+                },
+                {
+                    id: 2, name: "SHADOW", role: "Explorador", bike: "Kawasaki Ninja ZX-6R",
+                    desc: "Nunca lo ves llegar, solo escuchas el escape. El rey de las curvas cerradas.",
+                    stats: { speed: 100, handling: 90, chaos: 20 },
+                    img: "https://images.unsplash.com/photo-1622185135505-2d795043906a?auto=format&fit=crop&q=80&w=800"
+                },
+                {
+                    id: 3, name: "JINX", role: "Media & Stunts", bike: "KTM Duke 390",
+                    desc: "Si no está en una rueda, no está conduciendo. Documenta cada locura del grupo.",
+                    stats: { speed: 70, handling: 100, chaos: 95 },
+                    img: "https://images.unsplash.com/photo-1515777315835-281b94c9589f?auto=format&fit=crop&q=80&w=800"
+                },
+                {
+                    id: 4, name: "CYPHER", role: "Logística", bike: "Honda CBR650R",
+                    desc: "Calculador y preciso. Conoce cada radar y cada atajo de la ciudad.",
+                    stats: { speed: 85, handling: 85, chaos: 10 },
+                    img: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=800"
+                }
+            ];
+
+            return (
+                <div className="min-h-screen bg-black text-gray-200 font-sans selection:bg-red-600 selection:text-black overflow-x-hidden">
+
+                    {/* --- BACKGROUND GRID ANIMATION --- */}
+                    <div className="fixed inset-0 z-0 opacity-20 pointer-events-none overflow-hidden">
+                        <div className="absolute inset-0 bg-grid-moving w-full h-[200%] -top-1/2"></div>
+                    </div>
+
+                    {/* --- NAVBAR --- */}
+                    <nav className={`fixed top-0 w-full z-50 transition-all duration-500 border-b ${scrolled ? 'bg-black/90 backdrop-blur-lg border-red-900/50 py-3 shadow-[0_0_20px_rgba(220,0,0,0.3)]' : 'bg-transparent border-transparent py-6'}`}>
+                        <div className="container mx-auto px-6 flex justify-between items-center">
+                            <div className="flex items-center gap-2 group cursor-pointer">
+                                <span className="font-cyber font-bold text-2xl tracking-widest text-white group-hover:text-red-500 transition-colors glitch-hover">
+                                    ROCKET<span className="text-red-600">BOYZ</span>
+                                </span>
+                            </div>
+                            <div className="hidden md:flex gap-8 font-tech font-bold text-lg tracking-wide">
+                                {['EL CLAN', 'LA CREW', 'GALERÍA'].map((item, i) => (
+                                    <a key={item} href={`#${item === 'EL CLAN' ? 'about' : item === 'LA CREW' ? 'crew' : 'gallery'}`} className="relative overflow-hidden group py-1">
+                                        <span className="relative z-10 group-hover:text-red-500 transition-colors duration-300">{item}</span>
+                                        <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
+                                    </a>
+                                ))}
+                                <a href="#join" className="text-red-600 hover:text-white hover:shadow-[0_0_15px_rgba(255,0,0,0.6)] transition-all duration-300 flex items-center gap-1 px-3 py-1 border border-red-600/50 rounded-sm">
+                                    UNIRSE <Zap size={16} className="animate-pulse" />
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* --- HERO SECTION (FIX: MIN-H-SCREEN para evitar cortes) --- */}
+                    <header className="relative min-h-screen flex items-center justify-center overflow-hidden py-20">
+                        <div className="absolute inset-0 z-0 bg-black">
+                            {/* FIX: Nueva imagen Sportbike confiable */}
+                            <img
+                                src="https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?auto=format&fit=crop&q=80&w=1920"
+                                alt="Dark Sportbike"
+                                className="w-full h-full object-cover opacity-60 animate-breathe-zoom"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/80"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80"></div>
+                        </div>
+
+                        <div className="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
+
+                            {/* FIX: Logo Container Centrado y no cortado */}
+                            <div className="mb-8 p-6 rounded-3xl bg-black/40 backdrop-blur-sm border border-red-900/50 shadow-[0_0_60px_rgba(220,0,0,0.3)] animate-pulse hover:scale-105 transition-transform duration-500 cursor-pointer flex items-center justify-center">
+                                {/* Reemplazamos la imagen por el nuevo SVG Minimalista */}
+                                <MinimalistLogo className="w-48 h-48 md:w-72 md:h-72 drop-shadow-[0_0_25px_rgba(220,20,60,0.8)]" />
+                            </div>
+
+                            <h1 className="font-cyber text-6xl md:text-8xl font-black text-white mb-6 tracking-tighter leading-tight relative">
+                                <span className="block hover:skew-x-12 transition-transform duration-300">RIDE THE</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-red-500 to-orange-600 text-neon-red glitch-hover inline-block">VOID</span>
+                            </h1>
+
+                            <p className="font-tech text-xl md:text-3xl text-gray-300 mb-12 max-w-2xl mx-auto border-l-4 border-red-600 pl-6 py-2 bg-gradient-to-r from-black/50 to-transparent">
+                                Somos la nueva tribu del asfalto. Velocidad, lealtad y código oscuro.
+                            </p>
+
+                            <a href="#crew" className="group relative px-10 py-5 bg-red-600 text-white font-cyber font-bold tracking-[0.2em] text-lg clip-path-polygon hover:bg-white hover:text-black transition-all duration-300 tribal-border shadow-[0_0_30px_rgba(220,20,60,0.4)] hover:shadow-[0_0_50px_rgba(255,255,255,0.6)]">
+                                <span className="relative z-10 flex items-center gap-2">CONOCE AL GRUPO <ChevronDown className="group-hover:translate-y-1 transition-transform" size={20} /></span>
+                                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                            </a>
+                        </div>
+
+                        {/* Flecha decorativa inferior - Separada más del botón (bottom-4 en lugar de bottom-10) */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-red-600 animate-bounce hidden md:block">
+                            <ChevronDown size={40} strokeWidth={3} />
+                        </div>
+                    </header>
+
+                    {/* --- ABOUT / MANIFIESTO --- */}
+                    <section id="about" className="py-32 relative bg-zinc-950">
+                        <div className="container mx-auto px-6 relative z-10">
+                            <div className="flex flex-col md:flex-row gap-16 items-center">
+                                <div className="w-full md:w-1/2">
+                                    <RevealOnScroll delay={100}>
+                                        <div className="relative group">
+                                            <div className="absolute -inset-2 bg-red-600/40 blur-2xl rounded-lg opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
+                                            <div className="absolute inset-0 bg-grid-pattern opacity-30 z-20 pointer-events-none"></div>
+                                            <img
+                                                src="https://images.unsplash.com/photo-1605218427368-350924af28c6?auto=format&fit=crop&q=80&w=800"
+                                                alt="Cyberpunk City"
+                                                className="relative w-full h-auto object-cover tribal-border grayscale group-hover:grayscale-0 transition-all duration-700 scale-95 group-hover:scale-100"
+                                            />
+                                            <div className="absolute -bottom-6 -right-6 w-28 h-28 bg-black border-2 border-red-600 flex items-center justify-center font-cyber font-bold text-3xl text-white tribal-border shadow-[0_0_20px_red] z-30">
+                                                <span className="text-center leading-none">EST.<br /><span className="text-red-600">2024</span></span>
+                                            </div>
+                                        </div>
+                                    </RevealOnScroll>
+                                </div>
+
+                                <div className="w-full md:w-1/2 text-left">
+                                    <RevealOnScroll delay={300}>
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Zap className="text-red-600 animate-pulse" size={24} />
+                                            <span className="font-cyber text-red-600 tracking-[0.3em] text-sm">NUESTRO CÓDIGO</span>
+                                        </div>
+                                        <h2 className="font-cyber text-5xl md:text-6xl font-bold text-white mb-8 leading-none">
+                                            MÁS QUE MOTOS,<br /> SOMOS UN <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-purple-500 to-blue-600 animate-pulse">SISTEMA</span>
+                                        </h2>
+                                        <p className="font-tech text-xl text-gray-300 mb-8 leading-relaxed border-l-2 border-zinc-700 pl-4 hover:border-red-600 transition-colors duration-300">
+                                            Nacimos en el caos de la ciudad. RocketBoyz no es solo un club de motos; es una respuesta al aburrimiento.
+                                            Somos jóvenes, rápidos y estamos conectados. Nos gusta la estética cibertribal porque representa lo que somos:
+                                            una tribu primitiva armada con tecnología moderna.
+                                        </p>
+                                        <ul className="space-y-6 font-tech text-xl text-gray-200">
+                                            {['Rutas nocturnas todos los jueves.', 'Sin cuotas, solo gasolina y respeto.', 'Estilo Dark & Tech obligatorio.'].map((text, idx) => (
+                                                <li key={idx} className="flex items-center gap-4 group">
+                                                    <span className="w-3 h-3 bg-red-600 rotate-45 group-hover:rotate-180 transition-transform duration-500 shadow-[0_0_10px_red]"></span>
+                                                    <span className="group-hover:translate-x-2 transition-transform duration-300">{text}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </RevealOnScroll>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* --- THE CREW (MEMBERS) --- */}
+                    <section id="crew" className="py-32 bg-black relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-red-900/10 via-transparent to-transparent pointer-events-none"></div>
+
+                        <div className="container mx-auto px-6">
+                            <RevealOnScroll>
+                                <div className="text-center mb-20">
+                                    <h2 className="font-cyber text-5xl md:text-7xl font-bold text-white mb-4 tracking-tighter">THE <span className="text-red-600 inline-block hover:scale-110 transition-transform cursor-default">CREW</span></h2>
+                                    <div className="w-32 h-1.5 bg-red-600 mx-auto skew-x-[-20deg] shadow-[0_0_15px_red]"></div>
+                                </div>
+                            </RevealOnScroll>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-4">
+                                {members.map((member, index) => (
+                                    <RevealOnScroll key={member.id} delay={index * 150}>
+                                        <div
+                                            onClick={() => setActiveMember(member)}
+                                            className="group relative bg-zinc-900/50 border border-zinc-800 hover:border-red-600 transition-all duration-500 cursor-pointer overflow-hidden tribal-border hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(220,0,0,0.2)]"
+                                        >
+                                            <div className="h-80 overflow-hidden relative">
+                                                <div className="absolute inset-0 bg-red-600/0 group-hover:bg-red-600/20 transition-colors duration-500 z-10 mix-blend-hard-light"></div>
+                                                <img
+                                                    src={member.img}
+                                                    alt={member.name}
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0"
+                                                />
+                                                <div className="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-black via-black/80 to-transparent z-10"></div>
+
+                                                {/* Cyber Data Overlay */}
+                                                <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-end text-[10px] text-red-500 font-mono">
+                                                    <span>SYS.ID: 00{member.id}</span>
+                                                    <span>STATUS: ONLINE</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="p-6 relative z-20 -mt-20">
+                                                <div className="flex justify-between items-end mb-2 border-b border-zinc-700 pb-2 group-hover:border-red-600 transition-colors">
+                                                    <h3 className="font-cyber text-3xl font-bold text-white group-hover:text-red-500 transition-colors glitch-hover">{member.name}</h3>
+                                                    <Skull size={24} className="text-zinc-600 group-hover:text-white transition-colors" />
+                                                </div>
+                                                <p className="font-tech text-red-400 text-sm tracking-[0.2em] uppercase mb-4 font-bold">{member.role}</p>
+                                                <div className="flex items-center gap-2 text-gray-300 text-sm font-tech bg-black/50 p-2 rounded backdrop-blur-sm border border-zinc-800">
+                                                    <Bike size={16} className="text-red-500" />
+                                                    <span>{member.bike}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </RevealOnScroll>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* --- MODAL MIEMBRO (DETALLES) --- */}
+                    {activeMember && (
+                        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+                            <div className="absolute inset-0 bg-black/90 backdrop-blur-xl transition-opacity" onClick={() => setActiveMember(null)}></div>
+
+                            <div className="relative bg-black border border-red-600 w-full max-w-4xl p-1 tribal-border shadow-[0_0_100px_rgba(220,0,0,0.4)]" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                                <div className="bg-zinc-950 p-8 md:p-12 relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 via-purple-600 to-red-600 animate-pulse"></div>
+
+                                    <button
+                                        onClick={() => setActiveMember(null)}
+                                        className="absolute top-4 right-4 text-gray-400 hover:text-red-500 hover:rotate-90 transition-all z-20"
+                                    >
+                                        <X size={40} />
+                                    </button>
+
+                                    <div className="flex flex-col md:flex-row gap-10">
+                                        <div className="w-full md:w-2/5 relative">
+                                            <div className="absolute -inset-2 bg-gradient-to-tr from-red-600 to-transparent opacity-30 blur-lg"></div>
+                                            <img
+                                                src={activeMember.img}
+                                                alt={activeMember.name}
+                                                className="w-full h-80 md:h-full object-cover grayscale border-2 border-zinc-800 relative z-10 tribal-border"
+                                            />
+                                        </div>
+
+                                        <div className="w-full md:w-3/5 flex flex-col justify-center">
+                                            <h2 className="font-cyber text-6xl text-white mb-2 glitch-hover w-fit">{activeMember.name}</h2>
+                                            <p className="font-tech text-red-500 text-xl mb-6 uppercase tracking-widest border-b border-zinc-800 pb-4">{activeMember.role}</p>
+
+                                            <p className="text-gray-300 font-tech text-lg mb-8 italic border-l-4 border-purple-600 pl-4 bg-purple-900/10 py-2">"{activeMember.desc}"</p>
+
+                                            <div className="space-y-6 font-tech">
+                                                {['speed', 'handling', 'chaos'].map(stat => (
+                                                    <div key={stat} className="group">
+                                                        <div className="flex items-center justify-between text-sm text-gray-400 mb-1 uppercase tracking-wider">
+                                                            <span>{stat}</span>
+                                                            <span className="text-white">{activeMember.stats[stat]}%</span>
+                                                        </div>
+                                                        <div className="w-full h-3 bg-zinc-900 rounded-none border border-zinc-800 overflow-hidden relative">
+                                                            <div
+                                                                className={`h-full relative z-10 transition-all duration-1000 ease-out ${stat === 'speed' ? 'bg-red-600' : stat === 'handling' ? 'bg-purple-600' : 'bg-white'}`}
+                                                                style={{ width: `${activeMember.stats[stat]}%` }}
+                                                            ></div>
+                                                            <div className="absolute inset-0 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKrVq36zwjjgzhhYWGMYAEYB8RmROaABADeOQ8CXl/xfgAAAABJRU5ErkJggg==')] opacity-30 z-20"></div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="mt-8 pt-6 border-t border-zinc-800 flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-zinc-500 text-xs uppercase tracking-widest">MÁQUINA ACTUAL</p>
+                                                    <p className="text-white font-bold text-xl font-cyber">{activeMember.bike}</p>
+                                                </div>
+                                                <Bike size={48} className="text-zinc-800" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- GALLERY / VIBE CHECK --- */}
+                    <section id="gallery" className="py-32 bg-zinc-950 relative">
+                        <div className="container mx-auto px-6">
+                            <RevealOnScroll>
+                                <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+                                    <div>
+                                        <h2 className="font-cyber text-4xl md:text-6xl font-bold text-white">VISUAL <span className="text-purple-500 animate-pulse">DATA</span></h2>
+                                        <p className="font-tech text-gray-400 mt-4 text-lg max-w-lg">Evidencias de nuestras salidas nocturnas. No preguntes dónde, no preguntes cuándo.</p>
+                                    </div>
+                                    <button className="group flex items-center gap-3 text-white font-tech border border-zinc-700 px-8 py-4 hover:border-red-500 hover:bg-red-600/10 transition-all uppercase tracking-widest">
+                                        <span>Ver Feed Completo</span>
+                                        <ExternalLink size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                    </button>
+                                </div>
+                            </RevealOnScroll>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[250px]">
+                                <div className="col-span-2 row-span-2 relative group overflow-hidden border border-zinc-800">
+                                    <img src="https://images.unsplash.com/photo-1485965120184-e224f7a1db69?auto=format&fit=crop&q=80&w=800" alt="Ride" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0" />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <span className="font-cyber text-white text-3xl tracking-widest border-y-2 border-red-600 py-2">NIGHT RIDE #42</span>
+                                    </div>
+                                </div>
+                                <div className="col-span-1 row-span-1 relative group overflow-hidden border border-zinc-800">
+                                    <img src="https://images.unsplash.com/photo-1591637333184-19aa84b3e01f?auto=format&fit=crop&q=80&w=800" alt="Detail" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0" />
+                                </div>
+                                <div className="col-span-1 row-span-2 relative group overflow-hidden border border-zinc-800">
+                                    <img src="https://images.unsplash.com/photo-1615172268469-164750c8aa72?auto=format&fit=crop&q=80&w=800" alt="Vertical" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0" />
+                                </div>
+                                <div className="col-span-1 row-span-1 relative group overflow-hidden border border-zinc-800">
+                                    <img src="https://images.unsplash.com/photo-1600705722908-bab1e61c0b4d?auto=format&fit=crop&q=80&w=800" alt="Helmet" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0" />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* --- CONTACT / FOOTER --- */}
+                    <footer id="join" className="bg-black border-t border-red-900/30 pt-32 pb-16 relative overflow-hidden">
+                        {/* Background footer glow */}
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-64 bg-red-600/10 blur-[100px] pointer-events-none"></div>
+
+                        <div className="container mx-auto px-6 relative z-10">
+                            <div className="flex flex-col md:flex-row justify-between items-center mb-24">
+                                <div className="text-center md:text-left mb-12 md:mb-0">
+                                    <h2 className="font-cyber text-6xl md:text-7xl text-white mb-6">ÚNETE AL <span className="text-red-600">CAOS</span></h2>
+                                    <p className="font-tech text-gray-400 max-w-lg text-xl leading-relaxed">
+                                        ¿Tienes moto? ¿Tienes actitud? No buscamos gente normal.
+                                        <br />Escríbenos por DM. Te diremos las coordenadas.
+                                    </p>
+                                </div>
+
+                                <div className="flex gap-8">
+                                    {[Instagram, MapPin, Users].map((Icon, i) => (
+                                        <a key={i} href="#" className="w-20 h-20 bg-zinc-900 border border-zinc-700 flex items-center justify-center text-white hover:bg-red-600 hover:border-red-600 hover:text-black transition-all duration-300 group tribal-border hover:rotate-3">
+                                            <Icon size={40} className="group-hover:scale-125 transition-transform" />
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="border-t border-zinc-900 pt-8 flex flex-col md:flex-row justify-between items-center text-zinc-600 font-tech text-sm tracking-widest">
+                                <p>© 2024 ROCKETBOYZ. ALL RIGHTS RESERVED.</p>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                    <p>SYSTEM STATUS: ONLINE</p>
+                                </div>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        // Renderizar la App
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
